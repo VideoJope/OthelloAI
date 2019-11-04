@@ -57,8 +57,8 @@ class MiniMaxDepth:
                 boardAfterMove.play(move, currentColor)
 
                 value = self.minimaxdepth(boardAfterMove, currentBoard._opponent(currentColor), depth - 1, time)
-                if value > bestValue: 
-                    bestValue = value # no final do for, bestValue == value MAXIMO
+                
+                bestValue = max(value, bestValue) # no final do for, bestValue == value MAXIMO
 
             return bestValue
 
@@ -73,8 +73,8 @@ class MiniMaxDepth:
                 boardAfterMove.play(move, currentColor)
 
                 value = self.minimaxdepth(boardAfterMove, currentBoard._opponent(currentColor), depth - 1, time)
-                if value < bestValue:
-                    bestValue = value # no final do for, bestValue == value MINIMO
+                
+                bestValue = min(value, bestValue) # no final do for, bestValue == value MINIMO 
             
             return bestValue
 

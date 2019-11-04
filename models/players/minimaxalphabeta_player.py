@@ -1,8 +1,8 @@
 class MiniMaxAlphaBeta:
 
     MAXTIME = 3               # Constante que define tempo maximo que a IA pode demorar por jogada em segundos
-    MAXRECURSIONDEPTH = 4     # Constante que define profundidade maxima de recursao, necessaria para que a arvore de busca gerada nao seja extremamente desequilibrada no fim do tempo estabelecido
-    MINRECURSIONDEPTH = 1     # Constante que define profundidade minima de recursao, forcando que pelo menos um nivel a frente seja levado em consideracao apartir da raiz
+    MAXRECURSIONDEPTH = 5     # Constante que define profundidade maxima de recursao, necessaria para que a arvore de busca gerada nao seja extremamente desequilibrada no fim do tempo estabelecido
+    MINRECURSIONDEPTH = 1     # Constante que define profundidade minima de recursao, forcando que pelo menos um nivel apartir da raiz seja levado em consideracao antes de decidir uma jogada (independentemente do tempo levado)
 
     def __init__(self, color):
         self.color = color
@@ -11,7 +11,7 @@ class MiniMaxAlphaBeta:
         import time
         self.start_time = time.time() # Tempo que a jogada comecou
 
-        bestValue = -999 # Numero arbitrariamente pequeno
+        bestValue = None # Numero arbitrariamente pequeno
 
         for move in self.better_valid_moves(board, self.color):
 
@@ -19,10 +19,10 @@ class MiniMaxAlphaBeta:
             boardAfterMove = board.get_clone()
             boardAfterMove.play(move, self.color)
 
-            alpha = -999
-            beta = 999
+            alphaInicial = -999 # Numero arbitrariamente pequeno
+            betaInicial = 999   # Numero arbitrariamente grande
 
-            value = self.minimaxalphabeta(boardAfterMove, board._opponent(self.color), 0, time, alpha, beta)
+            value = self.minimaxalphabeta(boardAfterMove, board._opponent(self.color), 0, time, alphaInicial, betaInicial)
 
             if value > bestValue:
                 bestValue = value
@@ -44,7 +44,7 @@ class MiniMaxAlphaBeta:
 
         # Tabuleiro cheio ou tempo decorrido passara do MAXTIME estabelecido:
         if (depth >= self.MINRECURSIONDEPTH) and ((depth == self.MAXRECURSIONDEPTH) or (not possibleMoves) or (timeElapsed > self.MAXTIME - 0.13)): # 0.13 para levar em conta o tempo que pode vir a demorar para a jogada ser finalizada apos o backtracking comecar
-            if self.color == currentBoard.WHITE: # Retorna como heuristica a pontuacao da cor da IA no tabuleiro/node-folha atual
+            if self.color == currentBoard.WHITE: # Retorna como heuristica a ((pontuacao da cor da IA) - (pontuacao da cor do oponente)) no tabuleiro/node-folha atual
                 return currentBoard.score()[0] - currentBoard.score()[1]
             else: return currentBoard.score()[1] - currentBoard.score()[0]
 
@@ -52,40 +52,41 @@ class MiniMaxAlphaBeta:
         # Vez do jogador MAX (IA):
         if currentColor is self.color:
 
-            bestAlpha = -1000 # Numero arbitrariamente pequeno
+            maxValue = -1000 # Numero arbitrariamente pequeno
 
             for move in possibleMoves:
 
                 boardAfterMove = currentBoard.get_clone()
                 boardAfterMove.play(move, currentColor)
 
-                newAlpha = self.minimaxalphabeta(boardAfterMove, currentBoard._opponent(currentColor), depth + 1, time, alpha, beta)
+                value = self.minimaxalphabeta(boardAfterMove, currentBoard._opponent(currentColor), depth + 1, time, alpha, beta)
                 
-                if newAlpha > bestAlpha:
-                    bestAlpha = newAlpha # no final do for, bestAlpha == alpha MAXIMO
+                maxValue = max(value, maxValue)
+                alpha = max(alpha, maxValue)
 
-                if beta <= bestAlpha:
-                    return bestAlpha # realiza a poda na arvore, nao gerando mais nodes filhos
-            return bestAlpha
+
+                if alpha >= beta:
+                    return maxValue # realiza a poda na arvore, nao gerando mais nodes filhos
+            return maxValue
 
         # Vez do jogador MIN (oponente da IA):
         if currentColor is currentBoard._opponent(self.color): 
             
-            bestBeta = 1000 # Numero arbitrariamente grande
+            minValue = 1000 # Numero arbitrariamente grande
 
             for move in possibleMoves:
 
                 boardAfterMove = currentBoard.get_clone()
                 boardAfterMove.play(move, currentColor)
 
-                newBeta = self.minimaxalphabeta(boardAfterMove, currentBoard._opponent(currentColor), depth + 1, time, alpha, beta)
+                value = self.minimaxalphabeta(boardAfterMove, currentBoard._opponent(currentColor), depth + 1, time, alpha, beta)
                 
-                if newBeta < bestBeta:
-                    bestBeta = newBeta # no final do for, bestBeta == beta MINIMO
+                minValue = min(value, minValue)
+                beta = min(beta, minValue)
 
-                if bestBeta <= alpha:
-                    return bestBeta # realiza a poda na arvore, nao gerando mais nodes filhos
-            return bestBeta
+                if alpha >= beta:
+                    return minValue # realiza a poda na arvore, nao gerando mais nodes filhos
+            return minValue
 
 
 
